@@ -105,7 +105,7 @@ int main()
 	double controlE = snelb.norm2() / 2 - mu/(posb-posa).norm() + snela.norm2() / 2;
 	
 	// doe halve stap
-	// Vec posahalf(0., 0.);  // gebruik als 1 lichaam beweegt
+	//Vec posbhalf(0., 0.);  // gebruik als 1 lichaam beweegt
 	Vec posahalf = posa + 0.5 * h * snela + (h * h / 8) * acc(posa - posb); // gebruuik als 2 lichamen bewegen
 	Vec posbhalf = posb + 0.5 * h * snelb + (h * h / 8) * acc(posb - posa);
 	// loop over alle stappen
@@ -125,10 +125,10 @@ int main()
 		snelb = snelbnext;
 
 		posb = posbhalf - h / 2 * snelb;
-		posa = posahalf - h / 2 * snelb;
+		posa = posahalf - h / 2 * snela;
 		
 		double energy = snelb.norm2() / 2 - mu / (posb-posa).norm() + snela.norm2() / 2;
-
+		
 		outfile << posbhalf.x() << " " << posbhalf.y() << " " << i/100 << " " << abs((energy - controlE)/controlE) << " " << posahalf.x() << " " << posahalf.y() << "\n";
 
 	}
