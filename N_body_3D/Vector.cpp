@@ -12,7 +12,7 @@ class Vec {
 
     public:
     Vec() { _x=0; _y=0; _z=0; }
-    Vec(double x, double y, double z) { _x = x; _y = y; z=_z; }
+    Vec(double x, double y, double z) { _x = x; _y = y; _z = z; }
 
     double x() const { return _x; }
     double y() const { return _y; }
