@@ -15,7 +15,7 @@ class Vec {
 
 public:
     Vec() { _x=0; _y=0; _z=0; }
-    Vec(double x, double y, double z) { _x = x; _y = y; z=_z; }
+    Vec(double x, double y, double z) { _x = x; _y = y; _z=z; }
 
     double x() const { return _x; }
     double y() const { return _y; }
@@ -159,7 +159,7 @@ int main() {
 
 	outfile << "\n";
 	//calculating rest of positions and velocities
-	for (int n = 0; n < 100000; ++n) {
+	for (int n = 0; n < 50000; ++n) {
 		for (int i = 0; i < N; ++i) {
 			vel_next[i] = vel[i] + h * acc(pos_half, m, i, N, e);
 		}
