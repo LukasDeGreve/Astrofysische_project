@@ -6,6 +6,8 @@
 #include <random>
 #include <chrono>
 #include <functional>
+#include <sstream>
+#include <string>
 #include "Vector.cpp"
 using namespace std;
 
@@ -14,7 +16,9 @@ int main()
 {   
     // declare variables
     Vec pos;
+    Vec avg_pos;
     Vec vel;
+    Vec avg_vel;
     double x;
     double y;
     double z;
@@ -32,7 +36,9 @@ int main()
     chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
     // sets file for output
-    ofstream outfile("initial conditions.txt");
+    ofstream temp1("temp.txt");
+    temp1 << setprecision(8);
+    ofstream outfile("initial_conditions.txt");
     outfile << setprecision(8);
 
     // initialize the random number generator with time-dependent seed
@@ -60,7 +66,8 @@ int main()
         double z = radius * cos(theta);
 
         Vec pos(x, y, z);
-        
+        avg_pos += pos;
+
         // velocities according to an isotropic plumber model
         bool not_generated = true;
 
@@ -89,13 +96,37 @@ int main()
                 double v_z = q_esc * cos(theta);
 
                 Vec vel(v_x, v_y, v_z);
+                avg_vel += vel;
 
-                outfile << pos.out() << " " << vel.out() << '\n';
+                temp1 << pos.out() << " " << vel.out() << '\n';
             }
 
         }
         while ( not_generated );
     }
+
+   
+
+    // COM-position and velocity
+    avg_vel /= particles;
+    avg_pos /= particles;
+
+    // centering: we read the previous file and subtract the COM-velocity and position from every point
+    temp1.close();
+    ifstream temp2("temp.txt");
+    
+    while (temp2 >> x >> y >> z >> v_x >> v_y >> v_z)
+    {
+        Vec pos(x, y, z);
+        Vec vel(v_x, v_y, v_z);
+        pos -= avg_pos;
+        vel -= avg_vel;
+        
+        outfile << pos.out() << ' ' << vel.out() << endl;
+    }
+    
+
+    remove ("temp.txt");
 
     // more speed checks
     chrono::steady_clock::time_point end = chrono::steady_clock::now();
