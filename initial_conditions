@@ -8,6 +8,7 @@
 #include <functional>
 #include <sstream>
 #include <string>
+#include <vector>
 #include "Vector.cpp"
 using namespace std;
 
@@ -19,13 +20,15 @@ int main()
     Vec avg_pos;
     Vec vel;
     Vec avg_vel;
-    double x;
-    double y;
-    double z;
-    double v_x;
-    double v_y;
-    double v_z;
+    Vec diff;
+    vector<Vec> pos_list;
+    vector<Vec> vel_list;
+    double E_kin;
+    double E_pot;
+    double x, y, z, v_x, v_y, v_z;
+    double x1, y1, z1, v_x1, v_y1, v_z1;
     int particles; 
+    string filename;
     mt19937_64 rng;
 
     // aantal deeltjes in de simulatie
@@ -36,9 +39,8 @@ int main()
     chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
     // sets file for output
-    ofstream temp1("temp.txt");
-    temp1 << setprecision(8);
-    ofstream outfile("initial_conditions.txt");
+    filename = "initial_conditions_" + to_string(particles) + "particles.txt";
+    ofstream outfile (filename);
     outfile << setprecision(8);
 
     // initialize the random number generator with time-dependent seed
@@ -67,6 +69,7 @@ int main()
 
         Vec pos(x, y, z);
         avg_pos += pos;
+        pos_list.push_back(pos);
 
         // velocities according to an isotropic plumber model
         bool not_generated = true;
@@ -97,8 +100,7 @@ int main()
 
                 Vec vel(v_x, v_y, v_z);
                 avg_vel += vel;
-
-                temp1 << pos.out() << " " << vel.out() << '\n';
+                vel_list.push_back(vel);
             }
 
         }
@@ -112,21 +114,49 @@ int main()
     avg_pos /= particles;
 
     // centering: we read the previous file and subtract the COM-velocity and position from every point
-    temp1.close();
-    ifstream temp2("temp.txt");
-    
-    while (temp2 >> x >> y >> z >> v_x >> v_y >> v_z)
+   for (size_t i=0; i!=pos_list.size(); i++)
     {
-        Vec pos(x, y, z);
-        Vec vel(v_x, v_y, v_z);
-        pos -= avg_pos;
-        vel -= avg_vel;
+       pos_list[i] -= avg_pos;
+       vel_list[i] -= avg_vel;
+    }
+
+    // scaling: we rescale the coordinates so that the virial theorem is true
+    // the total potential energy must be -1/2 and the total kinetic energy 1/4 
+    for (size_t i=0; i!=pos_list.size(); i++)
+    {
+        E_kin += vel_list[i].norm2();
+        if (i % 100 == 0)
+        {
+            cout << i << endl;
+        }
         
-        outfile << pos.out() << ' ' << vel.out() << endl;
+
+        for (size_t j=0; j!=pos_list.size(); j++)
+        {  
+            if ( i != j)
+            {
+                diff = pos_list[i] - pos_list[j];
+                E_pot += 1/(diff.norm());
+            }
+            
+        }
     }
     
+    E_kin /= 2;
+    E_pot /= 2 * particles * particles;
 
-    remove ("temp.txt");
+    for (size_t i=0; i!=pos_list.size(); i++)
+    {
+       pos_list[i] *= -2*E_pot;
+       vel_list[i] /= 2*sqrt(E_kin);
+    }
+    
+    for (size_t i=0; i!=pos_list.size(); i++)
+    {
+        pos = pos_list[i];
+        vel = vel_list[i];
+        outfile << pos.out() << " " << vel.out() << endl;
+    }
 
     // more speed checks
     chrono::steady_clock::time_point end = chrono::steady_clock::now();
