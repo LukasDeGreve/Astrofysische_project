@@ -252,13 +252,13 @@ node* overloop(node* tree) {
 Vec force(node *root, Vec deeltje) {
 	Vec kracht(0, 0, 0);
 	
-	if (root == NULL) {kracht = Vec(0, 0, 0);}
+	if (root == NULL) {}
 	else {
 		Vec afst = get<0>(root->data) - deeltje;
 		if (afst.x() == 0 && afst.y() == 0 && afst.z() == 0) {kracht = Vec(0, 0, 0);}
 		else {
-			double delta = 1;
-			if (get<2>(root->data) / afst.norm() < delta) {
+			double delta = 0.25;
+			if (get<2>(root->data) / afst.norm() > delta) {
 
 				kracht += force(root->I, deeltje);
 				kracht += force(root->II, deeltje);
@@ -271,6 +271,7 @@ Vec force(node *root, Vec deeltje) {
 			}
 			else {
 				kracht = get<3>(root->data) * (1 / afst.norm3()) * afst; // get<3>(root->data) is totaal aantal deeltjes
+				//cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << endl;
 			}
 		}
 	}
@@ -322,7 +323,7 @@ node* tree = maketree(deeltjes, num);
 
 // kies een deeltje en bereken de kracht hierop
 
-deeltje = deeltjes[227];
+deeltje = deeltjes[8];
 Vec kracht = force(tree, deeltje);
 
 cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << " " << endl;
