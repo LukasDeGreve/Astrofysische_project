@@ -44,6 +44,19 @@ public:
         vector<double> cen = {xc, yc, zc};
         return cen;
         }
+    
+    vector<double> com() const {
+        double x = 0;
+        double y = 0;
+        double z = 0;
+        for (vector<double> deeltje : _deeltjes) { x += deeltje[0]; y += deeltje[1]; z += deeltje[2];}
+        double len = _deeltjes.size();
+        x /= len;
+        y /= len;
+        z /= len;
+        vector<double> c = {x, y, z};
+        return c;
+    }
 
     vector<Leaf> split() {
         double x0 = _space[0];
@@ -109,6 +122,14 @@ void printspace(array<double,6> v) {
     cout << ">" << endl;
 }
 
+void print3(vector<double> w){
+    cout << "<";
+    for (double el : w){
+        cout << el << " ";
+    }
+    cout << ">" << endl;
+}
+
 //declaration for new tree node
 struct node  {
 Leaf data;
@@ -142,21 +163,42 @@ node* newNode(Leaf data) {
 }
 
 double totaledeeltjes = 0.0;
+double bijdrage = 0;
 double deltaterm = 0.2;
 
 //functie die totaal aantal deeltjes telt door de boom te doorlopen
 void preorder2(node *root, vector<double> posdeeltje) {
     if (root == NULL) return;
-    double r = afstand((root->data).center(),posdeeltje);
+    vector<double> com = (root->data).com();
+    double aantal = ((root->data).deeltjes()).size();
     double w = (root->data).width();
-    cout << "w : " << w << " en r : " << r << endl;
+    double r;
+    if (aantal == 0){
+        r = afstand((root->data).center(), posdeeltje);
+    }
+    if (aantal != 0){
+        r = afstand(com, posdeeltje);
+    }
+    //als knoop ver genoeg zit, stop doorlopen en neem samen
     if (w/r < deltaterm){
+        cout << "w : " << w << " en r : " << r << endl;
         cout << "klein genoeg" << endl;
-        totaledeeltjes = totaledeeltjes + ((root->data).deeltjes()).size();
+        //als hij niet leeg is en ver genoeg, print de com uit
+        if (aantal != 0){
+            cout << "com = ";
+        print3(com);
+        }
+        totaledeeltjes = totaledeeltjes + aantal;
+        double bijdrage = (1.0/r)*(1.0/r);
+        krachtbijdrage.push_back(bijdrage);
         return;
     }
-    if (((root->data).deeltjes()).size() == 1){
+    //als knoop te dicht ligt, doorloop verder
+    cout << "w : " << w << " en r : " << r << endl;
+    if ((aantal == 1) & (com != posdeeltje)){
         totaledeeltjes = totaledeeltjes + ((root->data).deeltjes()).size();
+        
+        
     }
     preorder2(root->I, posdeeltje);
     preorder2(root->II, posdeeltje);
