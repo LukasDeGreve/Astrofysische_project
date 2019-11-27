@@ -106,7 +106,7 @@ public:
 
 //declaration for new tree node: onthou de COM en de width.
 struct node  { 
-tuple<Vec, vector<double>, double> data; 
+tuple<Vec, vector<double>, double, double> data; 
 struct node *I; 
 struct node *II;
 struct node *III; 
@@ -118,7 +118,7 @@ struct node *VIII;
 }; 
 
 //allocates new node 
-node* newNode(tuple<Vec, vector<double>, double> data) { 
+node* newNode(tuple<Vec, vector<double>, double, double> data) { 
   // declare and allocate new node  
 	node* newnode = new struct node(); 
   
@@ -142,8 +142,8 @@ node* Insert(node* root,Leaf data) {
 	if(root == NULL) { // empty tree
 		if (data.deeltjes().size() == 0) {}
 		else {
-			tuple<Vec, vector<double>, double> tup;
-			tup = std::make_tuple(data.com(), data.center(), data.width());
+			tuple<Vec, vector<double>, double, double> tup;
+			tup = std::make_tuple(data.com(), data.center(), data.width(), data.deeltjes().size());
 			root = newNode(tup);
 		}
 	}
@@ -179,8 +179,8 @@ node* Insert(node* root,Leaf data) {
 node* maketree(vector<Vec> deeltjes, double num) {
 	
 	Leaf hoofdruimte({{-num, num, -num, num, -num, num}}, deeltjes);
-	tuple<Vec, vector<double>, double> tup;
-	tup = std::make_tuple(hoofdruimte.com(), hoofdruimte.center(), hoofdruimte.width()); // deze tuple is de node van de tree
+	tuple<Vec, vector<double>, double, double> tup;
+	tup = std::make_tuple(hoofdruimte.com(), hoofdruimte.center(), hoofdruimte.width(), hoofdruimte.deeltjes().size()); // deze tuple is de node van de tree
 
 // begin met het maken van de structure. 
 
@@ -270,7 +270,7 @@ Vec force(node *root, Vec deeltje) {
 				kracht += force(root->VIII, deeltje);
 			}
 			else {
-				kracht = (1 / afst.norm3()) * afst;
+				kracht = get<3>(root->data) * (1 / afst.norm3()) * afst; // get<3>(root->data) is totaal aantal deeltjes
 			}
 		}
 	}
@@ -328,8 +328,13 @@ Vec kracht = force(tree, deeltje);
 cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << " " << endl;
 
 
+
+
+
+
+// check de controlelijst (=endlist) of er correct gesplitst is. 
+
 /*
-// check de controlelijst (=endlist) of er correct gesplitst is. dit is enkel toepasbaar in de functie maketree() zelf.
 for (Leaf kind : endlist) {
 	cout << "x: [" <<kind.space()[0] << ", " << kind.space()[1] << "] y: ["<< kind.space()[2] << ", " << kind.space()[3] << "] z: [" << kind.space()[4] << ", " << kind.space()[5] << "]" << '\t' << kind.deeltjes().size() << endl;}
 */
