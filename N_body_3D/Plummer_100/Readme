@@ -1,0 +1,4 @@
+For values of parameters: see .cpp file
+The time displayed in the animation has to be increased by a factor of 10 due to an error in the animation code
+Runtime .cpp file: ~ 2 min
+Runtime animation: ~ 40 min
