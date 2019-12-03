@@ -9,7 +9,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
-#include "Vector.cpp"
+#include "../Vector.cpp"
 using namespace std;
 
 
@@ -105,8 +105,6 @@ int main()
         while ( not_generated );
     }
 
-   
-
     // COM-position and velocity
     avg_vel /= particles;
     avg_pos /= particles;
@@ -116,8 +114,8 @@ int main()
     {
        pos_list[i] -= avg_pos;
        vel_list[i] -= avg_vel;
-    }
-
+    }   
+    
     // scaling: we rescale the coordinates so that the virial theorem is true
     // the total potential energy must be -1/2 and the total kinetic energy 1/4 
     for (size_t i=0; i!=pos_list.size(); i++)
@@ -140,14 +138,15 @@ int main()
         }
     }
     
-    E_kin /= 2;
+    E_kin /= 2 * particles;
     E_pot /= 2 * particles * particles;
 
     for (size_t i=0; i!=pos_list.size(); i++)
     {
-       pos_list[i] *= -2*E_pot;
+       pos_list[i] *= -1*2*E_pot;
        vel_list[i] /= 2*sqrt(E_kin);
     }
+
     
     for (size_t i=0; i!=pos_list.size(); i++)
     {
@@ -155,7 +154,6 @@ int main()
         vel = vel_list[i];
         outfile << pos.out() << " " << vel.out() << endl;
     }
-
     // more speed checks
     chrono::steady_clock::time_point end = chrono::steady_clock::now();
     cout << "Time difference = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
