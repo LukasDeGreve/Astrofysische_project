@@ -60,7 +60,7 @@ public:
 		double ymid = (y0 + y1)/2;
 		double zmid = (z0 + z1)/2;
 
-		vector<Vec> v;
+		vector<Vec> v;  //vecor van posities
 
 		Leaf I({{xmid, x1, ymid, y1, zmid, z1}}, v);
 		Leaf II({{xmid, x1, y0, ymid, zmid, z1}}, v);
@@ -106,7 +106,7 @@ public:
 
 //declaration for new tree node: onthou de COM en de width.
 struct node  { 
-tuple<Vec, vector<double>, double> data; 
+tuple<Vec, vector<double>, double, double> data; 
 struct node *I; 
 struct node *II;
 struct node *III; 
@@ -118,7 +118,7 @@ struct node *VIII;
 }; 
 
 //allocates new node 
-node* newNode(tuple<Vec, vector<double>, double> data) { 
+node* newNode(tuple<Vec, vector<double>, double, double> data) { 
   // declare and allocate new node  
 	node* newnode = new struct node(); 
   
@@ -140,9 +140,12 @@ node* newNode(tuple<Vec, vector<double>, double> data) {
 
 node* Insert(node* root,Leaf data) {
 	if(root == NULL) { // empty tree
-		tuple<Vec, vector<double>, double> tup;
-		tup = std::make_tuple(data.com(), data.center(), data.width());
-		root = newNode(tup);
+		if (data.deeltjes().size() == 0) {}
+		else {
+			tuple<Vec, vector<double>, double, double> tup;
+			tup = std::make_tuple(data.com(), data.center(), data.width(), data.deeltjes().size());
+			root = newNode(tup);
+		}
 	}
 	// choose where ot put the new node, based on the positiion of the center to the center of the parent
 	else {	vector<double> deel = data.center();
@@ -176,10 +179,10 @@ node* Insert(node* root,Leaf data) {
 node* maketree(vector<Vec> deeltjes, double num) {
 	
 	Leaf hoofdruimte({{-num, num, -num, num, -num, num}}, deeltjes);
+	tuple<Vec, vector<double>, double, double> tup;
+	tup = std::make_tuple(hoofdruimte.com(), hoofdruimte.center(), hoofdruimte.width(), hoofdruimte.deeltjes().size()); // deze tuple is de node van de tree
 
-	// begin met het maken van de structure.
-	tuple<Vec, vector<double>, double> tup;
-	tup = std::make_tuple(hoofdruimte.com(), hoofdruimte.center(), hoofdruimte.width());
+// begin met het maken van de structure. 
 
 	struct node *root = newNode(tup);
 
@@ -196,8 +199,10 @@ node* maketree(vector<Vec> deeltjes, double num) {
 		for( Leaf kind : kids) {
 	// een link tussen ouder en kind leggen
 			root = Insert(root, kind);
+
 	// deze lijn is om te kijken of het programma correct stopt met splitsen.
 			//if (kind.deeltjes().size() == 1) {endlist.push_back(kind);}
+
 	// is het kind nog steeds groter dan 2, dan moet er opnieuw gesplitst worden, dus terug naar de lijst kinderen.
 			if (kind.deeltjes().size() > 1) {
 				vector<Leaf> newkids = kind.split();
@@ -208,18 +213,52 @@ node* maketree(vector<Vec> deeltjes, double num) {
 	return root;
 }
 
+// functie om de tree eens te overlopen ter controle deze print de centers van alle kubusjes.
 
 
-Vec force(node* root, Vec deeltje) {
+node* overloop(node* tree) {
+	vector<double> cen = get<1>(tree->data);
+	cout << get<2>(tree->data) << " " << cen[0] << " " << cen[1] << " " << cen[2] << " " << endl;
+	if (tree->I != NULL){
+		overloop(tree->I);
+	}
+	if (tree->II != NULL){
+		overloop(tree->II);
+	}
+	if (tree->III != NULL){
+		overloop(tree->III);
+	}
+	if (tree->IV != NULL){
+		overloop(tree->IV);
+	}
+	if (tree->V != NULL){
+		overloop(tree->V);
+	}
+	if (tree->VI != NULL){
+		overloop(tree->VI);
+	}
+	if (tree->VII != NULL){
+		overloop(tree->VII);
+	}
+	if (tree->VIII != NULL){
+		overloop(tree->VIII);
+	}
+	return tree;
+}
+
+
+// functie om de kracht op een deeltje te berekenen. deze geeft een som terug van alle krachten die op het bepaalde deeltje inwerken.
+
+Vec force(node *root, Vec deeltje) {
 	Vec kracht(0, 0, 0);
 	
-	if (root == NULL) {kracht = Vec(0, 0, 0);}
+	if (root == NULL) {}
 	else {
 		Vec afst = get<0>(root->data) - deeltje;
-		if (afst.x() ==0 && afst.y() == 0 && afst.z() == 0) {kracht = Vec(0, 0, 0);}
+		if (afst.x() == 0 && afst.y() == 0 && afst.z() == 0) {kracht = Vec(0, 0, 0);}
 		else {
-			double delta = 1;
-			if (get<2>(root->data) > delta) {
+			double delta = 0.25;
+			if (get<2>(root->data) / afst.norm() > delta) {
 
 				kracht += force(root->I, deeltje);
 				kracht += force(root->II, deeltje);
@@ -231,7 +270,8 @@ Vec force(node* root, Vec deeltje) {
 				kracht += force(root->VIII, deeltje);
 			}
 			else {
-				kracht = (1 / afst.norm3()) * afst;
+				kracht = get<3>(root->data) * (1 / afst.norm3()) * afst; // get<3>(root->data) is totaal aantal deeltjes
+				//cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << endl;
 			}
 		}
 	}
@@ -241,10 +281,15 @@ Vec force(node* root, Vec deeltje) {
 
 int main() { 
 
+
+
 chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 ifstream inFile;
 inFile.open("initial_conditions.txt", std::ios::in);
+
+// initialiseer variabelen die nodig zijn voor txt in te lezen
+
 vector<Vec> deeltjes;
 Vec deeltje(0, 0, 0);
 double getal = 0.0;
@@ -252,9 +297,12 @@ double num = 0.0;
 int teller = 0;
 vector<double> testvector = {};
 
+// inlezen van txt-file, classificeren van de posities in Vec's en bepalen hoe groot de initiele doos moet zijn.
+
 while (inFile >> getal) {
-	if (teller % 6 <= 2 && abs(getal) > num) {
-		num = abs(getal) + 1;
+	if (teller % 6 <= 2) {
+		if (abs(getal) > num) {num = abs(getal) + 1;}
+
 		testvector.push_back(getal);
 	}
 	
@@ -267,56 +315,30 @@ while (inFile >> getal) {
 	teller += 1;
 }
 
-cout << num << endl;
 
- /*create root node*/
+//create tree and return the root node
 
 
-Leaf hoofdruimte({{-num, num, -num, num, -num, num}}, deeltjes);
+node* tree = maketree(deeltjes, num);
 
-// begin met het maken van de structure.
-tuple<Vec, vector<double>, double> tup;
-tup = std::make_tuple(hoofdruimte.com(), hoofdruimte.center(), hoofdruimte.width());
+// kies een deeltje en bereken de kracht hierop
 
-struct node *root = newNode(tup);
+deeltje = deeltjes[8];
+Vec kracht = force(tree, deeltje);
 
-// kinderen is een lijst met ruimtes, waar nog meer dan 1 deeltje in aanwezig zijn. Als deze lijst leeg is, dan moet er volledig gestopt worden met splitsen.
+cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << " " << endl;
 
-vector<Leaf> kinderen = hoofdruimte.split();
-vector<Leaf> endlist;
 
-while(kinderen.size()>1) {
-
-	vector<Leaf> kids = kinderen;
-	kinderen = {};
-
-	for( Leaf kind : kids) {
-// een link tussen ouder en kind leggen
-		root = Insert(root, kind);
-// deze lijn is om te kijken of het programma correct stopt met splitsen.
-		if (kind.deeltjes().size() == 1) {endlist.push_back(kind);}
-// is het kind nog steeds groter dan 2, dan moet er opnieuw gesplitst worden, dus terug naar de lijst kinderen.
-		if (kind.deeltjes().size() > 1) {
-			vector<Leaf> newkids = kind.split();
-			for (Leaf newkid : newkids) {kinderen.push_back(newkid);}
-		}
-	}
-}
 
 
 
 
 // check de controlelijst (=endlist) of er correct gesplitst is. 
-/*
 
+/*
 for (Leaf kind : endlist) {
 	cout << "x: [" <<kind.space()[0] << ", " << kind.space()[1] << "] y: ["<< kind.space()[2] << ", " << kind.space()[3] << "] z: [" << kind.space()[4] << ", " << kind.space()[5] << "]" << '\t' << kind.deeltjes().size() << endl;}
-
 */
-for (Leaf kind : endlist) {
-	cout << "x: " << kind.com().x() << " y: " << kind.com().y() << " z: " << kind.com().z() << endl;
-}
-
 chrono::steady_clock::time_point end = chrono::steady_clock::now();
     cout << "Time difference = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() << "ms" << endl;
 
