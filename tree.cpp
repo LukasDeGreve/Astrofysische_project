@@ -11,11 +11,12 @@
 #include "Vector.cpp"
 using namespace std;
 
+// maak een klasse die ruimte bezit met alle deeltjes die in de ruimte zitten
 
 class Leaf{
 	
-	array<double,6> _space;
-	vector<Vec> _deeltjes;
+	array<double,6> _space; // space = {{-x, x, -y, y, -z, z}}
+	vector<Vec> _deeltjes; // lijst van alle posities van elk deeltje
 
 public:
 	Leaf() {_space={{-1, 1, -1, 1, -1, 1}}; _deeltjes={Vec()};}
@@ -27,6 +28,8 @@ public:
 
 	double width() const {double breedte = _space[1] - _space[0]; return breedte;}
 
+	// center is het geometrisch centrum van het ruimteblokje
+
 	vector<double> center() const {
 		double xc = (_space[0] + _space[1]) /2;
 		double yc = (_space[2] + _space[3]) /2;
@@ -34,6 +37,8 @@ public:
 		vector<double> cen = {xc, yc, zc};
 		return cen;
 		}
+
+	// com is het center of mass van de ruimte
 
 	Vec com() const {
 		double x = 0;
@@ -47,6 +52,8 @@ public:
 		Vec c(x, y, z);
 		return c;
 	}
+
+	// deze functie split, split de ruimte op in octanten en bekijkt welke deeltjes verplaatst moeten worden naar elk octant
 
 	vector<Leaf> split() {
 		double x0 = _space[0];
@@ -71,10 +78,11 @@ public:
 		Leaf VII({{x0, xmid, y0, ymid, z0, zmid}}, v);
 		Leaf VIII({{x0, xmid, ymid, y1, z0, zmid}}, v);
 
-
+		// stopde kinderen van de ruimte in de array
 
 		array<Leaf,8> kinderen = {{I, II, III, IV, V, VI, VII, VIII}};
 
+		// kijken welk deeltje naar welke ruimte moet.
 
 		double first;
 		double second;
@@ -82,15 +90,17 @@ public:
 		array<double,6> ruimte;
 		vector<Leaf> kids;
 		
-		for (Leaf kind : kinderen){
+		for (Leaf kind : kinderen){ // overlopen van de ruimten
 			ruimte = kind.space();
 			v = kind.deeltjes();
 
-			for (Vec deeltje : _deeltjes) {
+			for (Vec deeltje : _deeltjes) { // overlopen van de deeltjes
 				first = deeltje.x();
 				second = deeltje.y();
 				thirth = deeltje.z();
-
+				
+				//  
+				
 				if (ruimte[0] <= first && ruimte[2] <= second  && ruimte[4] <= thirth && first < ruimte[1] && second < ruimte[3] && thirth < ruimte[5]){v.push_back(deeltje);}
 				
 			}
@@ -104,7 +114,7 @@ public:
 
 };
 
-//declaration for new tree node: onthou de COM en de width.
+//declaration for new tree node: onthou de COM, geometrisch center de width en het aantal deeltjes.
 struct node  { 
 tuple<Vec, vector<double>, double, double> data; 
 struct node *I; 
@@ -117,7 +127,7 @@ struct node *VII;
 struct node *VIII; 
 }; 
 
-//allocates new node 
+//allocates new node. maakt een nieuwe node met de informatie en initialiseert de 8 subnodes
 node* newNode(tuple<Vec, vector<double>, double, double> data) { 
   // declare and allocate new node  
 	node* newnode = new struct node(); 
@@ -136,11 +146,12 @@ node* newNode(tuple<Vec, vector<double>, double, double> data) {
 	return newnode; 
 } 
 
-// functie die bij het splitsen van een tak de bladeren in de juiste volgorde zet.
+// functie die bij het splitsen van een tak de bladeren in de juiste volgorde zet. Dit gebeurt op basis van de posities van de geometrische centrums van de ruimten.
+// dit is een uitbreiding op de binary tree 
 
 node* Insert(node* root,Leaf data) {
-	if(root == NULL) { // empty tree
-		if (data.deeltjes().size() == 0) {}
+	if(root == NULL) { // als de node leeg is, dan initialiseer je een nieuwe node. 
+		if (data.deeltjes().size() == 0) {} // als er geen deeltjes in de ruimte zitten, moet er niets gebeuren.
 		else {
 			tuple<Vec, vector<double>, double, double> tup;
 			tup = std::make_tuple(data.com(), data.center(), data.width(), data.deeltjes().size());
@@ -148,8 +159,8 @@ node* Insert(node* root,Leaf data) {
 		}
 	}
 	// choose where ot put the new node, based on the positiion of the center to the center of the parent
-	else {	vector<double> deel = data.center();
-		vector<double> og = get<1>(root->data);
+	else {	vector<double> deel = data.center(); // deel is het geometrisch centrum van het kind
+		vector<double> og = get<1>(root->data); // og is het geometrisch centrum van de ouder
 
 		if (deel[0] <= og[0]) {
 			if (deel[1] <= og[1]) {
@@ -161,7 +172,7 @@ node* Insert(node* root,Leaf data) {
 				else {root->IV = Insert(root->IV,data);}
 			}
 		}
-		// else, insert in right subtree. 
+
 		else { 
 			if (deel[1] <= og[1]) {
 				if (deel[2] <= og[2]) {root->V = Insert(root->V,data);} 
@@ -176,7 +187,11 @@ node* Insert(node* root,Leaf data) {
 	return root;
 }
 
+// deze functie maaktde hierarchische boom voor een bepaalde tijdsstap. 'num' is een waarde groter dan de verste positie van alle deeltjes
+
 node* maketree(vector<Vec> deeltjes, double num) {
+	
+	// maak de initiele ruimte waar alle deeltjes in zitten
 	
 	Leaf hoofdruimte({{-num, num, -num, num, -num, num}}, deeltjes);
 	tuple<Vec, vector<double>, double, double> tup;
@@ -189,7 +204,6 @@ node* maketree(vector<Vec> deeltjes, double num) {
 	// kinderen is een lijst met ruimtes, waar nog meer dan 1 deeltje in aanwezig zijn. Als deze lijst leeg is, dan moet er volledig gestopt worden met splitsen.
 
 	vector<Leaf> kinderen = hoofdruimte.split();
-	//vector<Leaf> endlist;
 
 	while(kinderen.size()>1) {
 
@@ -200,10 +214,7 @@ node* maketree(vector<Vec> deeltjes, double num) {
 	// een link tussen ouder en kind leggen
 			root = Insert(root, kind);
 
-	// deze lijn is om te kijken of het programma correct stopt met splitsen.
-			//if (kind.deeltjes().size() == 1) {endlist.push_back(kind);}
-
-	// is het kind nog steeds groter dan 2, dan moet er opnieuw gesplitst worden, dus terug naar de lijst kinderen.
+	// als er in het kind meer dan 1 deeltje zit, dan moet er opnieuw gesplitst worden. hiervoor moet deze ruimte terug in de lijst 'kinderen worden gestopt.
 			if (kind.deeltjes().size() > 1) {
 				vector<Leaf> newkids = kind.split();
 				for (Leaf newkid : newkids) {kinderen.push_back(newkid);}
@@ -248,29 +259,29 @@ node* overloop(node* tree) {
 
 
 // functie om de kracht op een deeltje te berekenen. deze geeft een som terug van alle krachten die op het bepaalde deeltje inwerken.
+// deeltje = het deeltje, waarop we de inwerkende kracht willen berekenen. root is de tree. N is het totaal aantal deeltje. delta is het criterium voor de width/afstand en soft is de waarde voor de softening
 
-Vec force(node *root, Vec deeltje) {
+Vec force(node *root, Vec deeltje, double N, double delta, double soft) {
 	Vec kracht(0, 0, 0);
 	
 	if (root == NULL) {}
 	else {
-		Vec afst = get<0>(root->data) - deeltje;
-		if (afst.x() == 0 && afst.y() == 0 && afst.z() == 0) {kracht = Vec(0, 0, 0);}
+		Vec afst = get<0>(root->data) - deeltje; // get<0>(root->data) is de center of mass
+		if (afst.x() == 0 && afst.y() == 0 && afst.z() == 0) {kracht = Vec(0, 0, 0);} // zodat het deeltje zichzelf niet meeneemt
 		else {
-			double delta = 0.25;
 			if (get<2>(root->data) / afst.norm() > delta) {
 
-				kracht += force(root->I, deeltje);
-				kracht += force(root->II, deeltje);
-				kracht += force(root->III, deeltje);
-				kracht += force(root->IV, deeltje);
-				kracht += force(root->V, deeltje);
-				kracht += force(root->VI, deeltje);
-				kracht += force(root->VII, deeltje);
-				kracht += force(root->VIII, deeltje);
+				kracht += force(root->I, deeltje, N, delta, soft);
+				kracht += force(root->II, deeltje, N, delta, soft);
+				kracht += force(root->III, deeltje, N, delta, soft);
+				kracht += force(root->IV, deeltje, N, delta, soft);
+				kracht += force(root->V, deeltje, N, delta, soft);
+				kracht += force(root->VI, deeltje, N, delta, soft);
+				kracht += force(root->VII, deeltje, N, delta, soft);
+				kracht += force(root->VIII, deeltje, N, delta, soft);
 			}
 			else {
-				kracht = get<3>(root->data) * (1 / afst.norm3()) * afst; // get<3>(root->data) is totaal aantal deeltjes
+				kracht = get<3>(root->data)/N * (1 / pow(afst.norm2() + soft, 3/2)) * afst; // get<3>(root->data) is totaal aantal deeltjes
 				//cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << endl;
 			}
 		}
@@ -300,6 +311,7 @@ vector<double> testvector = {};
 // inlezen van txt-file, classificeren van de posities in Vec's en bepalen hoe groot de initiele doos moet zijn.
 
 while (inFile >> getal) {
+	
 	if (teller % 6 <= 2) {
 		if (abs(getal) > num) {num = abs(getal) + 1;}
 
@@ -321,12 +333,17 @@ while (inFile >> getal) {
 
 node* tree = maketree(deeltjes, num);
 
+double delta = 0.25;
+double soft = 0.5;
+
 // kies een deeltje en bereken de kracht hierop
 
-deeltje = deeltjes[8];
-Vec kracht = force(tree, deeltje);
 
-cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << " " << endl;
+for (Vec particle : deeltjes) {
+	Vec kracht = force(tree, particle, deeltjes.size(), delta, soft);
+	cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << " " << endl;
+}
+
 
 
 
