@@ -28,7 +28,7 @@ ez::ezETAProgressBar eta_time(integration_time_steps);
 chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
 ifstream inFile;
-inFile.open("/home/lukasdegreve/Documents/School/Astrofysische simulaties/Astrofysische_project/initial conditions/initial_conditions_collide_100particles.txt",std::ios::in);
+inFile.open("/home/lukasdegreve/Documents/School/Astrofysische simulaties/Astrofysische_project/initial conditions/initial_conditions_1000particles.txt",std::ios::in);
 double posx,posy,posz,velx,vely,velz;
 double num = 0.;
 
