@@ -78,7 +78,7 @@ for (int i = 0; i < particles ; i++)
         double rand5 = random_number();
 
         double p_max = 50176.0 * sqrt(7) / (19683.0 * M_PI) * rand5;
-        double p = 512 / (7 * M_PI) * pow(1 - rand4, 7.0/2.0) * rand4 * rand4;
+        double p = 512 / (7 * M_PI) * pow(1 - rand4 * rand4, 7.0/2.0) * rand4 * rand4;
 
         if ( p_max < p )
         {
