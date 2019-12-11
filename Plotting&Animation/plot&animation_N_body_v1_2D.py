@@ -53,47 +53,48 @@ plt.show()
 '''
 #Animation of all the positions of all the particles
 fig = plt.figure()
-ax = Axes3D(fig)
-
+ax = fig.add_subplot(111)
 #skip data points
 skip = 1
-trail = 15
-size_particle = 0.5
+trail = 1
+size_particle = 40
 #generating a color for every particle
+'''
 colors = np.zeros((0))
+
 for i in range(N):
     colors = np.append(colors,'#%06X' % randint(0, 0xFFFFFF))
-
+'''
+colors = np.array(['r', 'g', 'b'])
 #function for creating each frame of the animation (acts as loop)
 def animate(i):
     print("Frame {}/{}".format(i,int(code_blocks/skip)-1))
 
-    #Plotting full trajectory of first partcle (is useful for three body in 8 shape example)
-    #ax.scatter(Data[:,0,0], Data[:,1,0], Data[:,2,0], c  = 'black',s=0.1)
 
     #Plotting position of every particle
     if i < trail:
         axes = plt.gca()
         axes.set_xlim([xmin,xmax])
         axes.set_ylim([ymin,ymax])
-        axes.set_zlim([zmin,zmax])
         for n in range(N):
-            ax.scatter(Data[i*skip,0,n], Data[i*skip,1,n], Data[i*skip,2,n], c  = colors[n], s = size_particle)
+            ax.scatter(Data[i*skip,0,n], Data[i*skip,1,n], c  = colors[n], s = size_particle,zorder=n+1)
     else:
         ax.clear()
         axes = plt.gca()
         axes.set_xlim([xmin,xmax])
         axes.set_ylim([ymin,ymax])
-        axes.set_zlim([zmin,zmax])
         for n in range(N):
-            ax.scatter(Data[(i-trail)*skip:i*skip,0,n], Data[(i-trail)*skip:i*skip,1,n], Data[(i-trail)*skip:i*skip,2,n], c  = colors[n], s = size_particle)
+            ax.scatter(Data[(i-trail)*skip:i*skip,0,n], Data[(i-trail)*skip:i*skip,1,n], c  = colors[n], s = size_particle,zorder=n+1)
 
+    #Plotting full trajectory of first partcle (is useful for three body in 8 shape example)
+    ax.plot(Data[:,0,0], Data[:,1,0], c  = 'black',zorder=0)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     #ax.set_zlabel('z')
    
-    ax.text2D(0.5,0.85,'Three body problem',fontsize=14,horizontalalignment='center',verticalalignment='center',transform=ax.transAxes)
-    ax.text2D(0.1,0.9,'t={:.3f} s'.format(round(i*h*skip*print_step,4)),bbox=dict(facecolor='r',alpha=0.5),horizontalalignment='center',verticalalignment='center',transform=ax.transAxes)
+   #ax.text(0.5,0.85,'Three body problem',fontsize=14,horizontalalignment='center',verticalalignment='center',transform=ax.transAxes)
+    ax.set_title('Three body problem')
+    ax.text(0.1,0.9,'t={:.3f}'.format(round(i*h*skip*print_step,4)),bbox=dict(facecolor='r',alpha=0.5),horizontalalignment='center',verticalalignment='center',transform=ax.transAxes)
 
     # Hide grid lines
     ax.grid(False)
@@ -101,8 +102,7 @@ def animate(i):
     # Hide axes ticks
     #ax.set_xticks([])
     #ax.set_yticks([])
-    ax.set_zticks([])
-
+'''
     # Get rid of colored axes planes
     # First remove fill
     ax.xaxis.pane.fill = False
@@ -118,8 +118,8 @@ def animate(i):
     #Change viewing angle
     #xy plane: 90,90
     ax.view_init(90,90)
-
+'''
 #Make and save animation
 anim = animation.FuncAnimation(fig, animate, frames = code_blocks, interval = 20, blit = False)
-anim.save('3_body_h={}_e={}.mp4'.format(h,e), fps=30, extra_args=['-vcodec', 'libx264'])
+anim.save('3_body_h={}_e={}_xy.mp4'.format(h,e), fps=30, extra_args=['-vcodec', 'libx264'])
 
