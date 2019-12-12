@@ -227,37 +227,34 @@ node* maketree(vector<Vec> deeltjes, double num) {
 	return root;
 }
 
-// functie om de tree eens te overlopen ter controle deze print de centers van alle kubusjes.
+// functie om de tree eens te overlopen en te vernietigen, zodat de memory niet vol zit.
 
 
 node* overloop(node* tree) {
-	vector<double> cen = get<1>(tree->data);
-	cout << get<2>(tree->data) << " " << cen[0] << " " << cen[1] << " " << cen[2] << " " << endl;
-	if (tree->I != NULL){
-		overloop(tree->I);
-	}
-	if (tree->II != NULL){
-		overloop(tree->II);
-	}
-	if (tree->III != NULL){
-		overloop(tree->III);
-	}
-	if (tree->IV != NULL){
-		overloop(tree->IV);
-	}
-	if (tree->V != NULL){
-		overloop(tree->V);
-	}
-	if (tree->VI != NULL){
-		overloop(tree->VI);
-	}
-	if (tree->VII != NULL){
-		overloop(tree->VII);
-	}
-	if (tree->VIII != NULL){
-		overloop(tree->VIII);
-	}
+	if (tree == NULL) {return tree;}
+
+	else {if (tree->I != NULL) tree->I = overloop(tree->I);
+
+	if (tree->II != NULL) tree->II = overloop(tree->II);
+
+	if (tree->III != NULL) tree->III = overloop(tree->III);
+
+	if (tree->IV != NULL) tree->IV = overloop(tree->IV);
+
+	if (tree->V != NULL) tree->V = overloop(tree->V);
+
+	if (tree->VI != NULL) tree->VI = overloop(tree->VI);
+
+	if (tree->VII != NULL) tree->VII = overloop(tree->VII);
+
+	if (tree->VIII != NULL) tree->VIII = overloop(tree->VIII);
+	
+	if (tree->I == NULL && tree->II == NULL && tree->III == NULL && tree->VI == NULL && tree->V == NULL && tree->IV == NULL && tree->VII == NULL && tree->VIII == NULL){
+	delete tree;
+	tree = NULL;
 	return tree;
+	}}
+
 }
 
 
