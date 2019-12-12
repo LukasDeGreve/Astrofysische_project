@@ -149,14 +149,14 @@ int main() {
 	eta_time.start();
 	for (int n = 0; n < time_steps; ++n, ++eta_time) {
 		//Make tree
-		node* tree = maketree(pos, num);
+		node* tree = maketree(pos_half, num);
 		//if (n % write_step == 0) {
 		//	cout << "time step  " << n << "/" << to_string(time_steps) << endl;
 		//}
 		//Calculating velocity (Acceleration calculation needs to be in a seperate for loop)
 		//For loop over all particles
 		for (int i = 0; i < N; ++i) {
-			vel_next[i] = vel[i] + h * force(tree,pos[i], N, delta, e);
+			vel_next[i] = vel[i] + h * force(tree,pos_half[i], N, delta, e);
 		}
 
 		//Calculating postion
