@@ -143,6 +143,8 @@ int main() {
 	}
 	outfile << "\n";
 
+	// destruct the tree
+	tree = overloop(tree);
 
 	//Calculating the rest of the positions and velocities using the leapfrog integrator
 	//For loop over all timesteps 
@@ -158,7 +160,9 @@ int main() {
 		for (int i = 0; i < N; ++i) {
 			vel_next[i] = vel[i] + h * force(tree,pos_half[i], N, delta, e);
 		}
-
+		
+		// destruct the tree
+		tree = overloop(tree);
 		//Calculating postion
 		//For loop over all particles
 		for (int i = 0; i < N; ++i) {
