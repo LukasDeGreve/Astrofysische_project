@@ -281,7 +281,7 @@ Vec force(node *root, Vec deeltje, double N, double delta, double soft) {
 				kracht += force(root->VIII, deeltje, N, delta, soft);
 			}
 			else {
-				kracht = get<3>(root->data)/N * (1 / pow(afst.norm2() + soft, 3/2)) * afst; // get<3>(root->data) is totaal aantal deeltjes
+				kracht = get<3>(root->data)/N * (1 / pow(afst.norm2() + soft*soft, 1.5)) * afst; // get<3>(root->data) is totaal aantal deeltjes
 				//cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << endl;
 			}
 		}
