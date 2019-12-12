@@ -269,7 +269,7 @@ Vec force(node *root, Vec deeltje, double N, double delta, double soft) {
 		Vec afst = get<0>(root->data) - deeltje; // get<0>(root->data) is de center of mass
 		if (afst.x() == 0 && afst.y() == 0 && afst.z() == 0) {kracht = Vec(0, 0, 0);} // zodat het deeltje zichzelf niet meeneemt
 		else {
-			if (get<2>(root->data) / afst.norm() > delta) {
+			if (get<2>(root->data) / afst.norm() > delta && get<3>(root->data) != 1) {
 
 				kracht += force(root->I, deeltje, N, delta, soft);
 				kracht += force(root->II, deeltje, N, delta, soft);
@@ -281,7 +281,7 @@ Vec force(node *root, Vec deeltje, double N, double delta, double soft) {
 				kracht += force(root->VIII, deeltje, N, delta, soft);
 			}
 			else {
-				kracht = get<3>(root->data)/N * (1 / pow(afst.norm2() + soft, 3/2)) * afst; // get<3>(root->data) is totaal aantal deeltjes
+				kracht = get<3>(root->data)/N * (1 / pow(afst.norm2() + soft*soft, 1.5)) * afst; // get<3>(root->data) is totaal aantal deeltjes
 				//cout << kracht.x() << " " << kracht.y() << " " << kracht.z() << endl;
 			}
 		}
