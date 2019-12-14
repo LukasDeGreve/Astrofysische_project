@@ -1,0 +1,18 @@
+#!/bin/bash
+loops=50
+path_arr=("../initial_conditions/initial_conditions_10particles.txt" "../initial_conditions/initial_conditions_30particles.txt" 
+"../initial_conditions/initial_conditions_60particles.txt" "../initial_conditions/initial_conditions_100particles.txt"
+"../initial_conditions/initial_conditions_300particles.txt" "../initial_conditions/initial_conditions_600particles.txt"
+"../initial_conditions/initial_conditions_1000particles.txt")
+
+for path in "${path_arr[@]}" 
+do
+echo "$path" >> benchmark.txt   
+    for i in {0..75}
+    do
+        time_step=$(./N_body_3D/Benchmark $path)
+        echo "$time_step" >> benchmark.txt
+    done
+done
+echo "Benchmark done!"
+
