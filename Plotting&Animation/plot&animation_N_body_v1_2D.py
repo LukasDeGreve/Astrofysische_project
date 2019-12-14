@@ -56,6 +56,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 #skip data points
 skip = 1
+#trail length for particles
 trail = 1
 size_particle = 40
 #generating a color for every particle
