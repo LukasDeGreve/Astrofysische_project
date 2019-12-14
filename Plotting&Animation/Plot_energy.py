@@ -14,11 +14,12 @@ t1, E1 = np.genfromtxt("/home/wout/Documents/Astro_sim/Project/Fatsoenlijke_data
 t2, E2 = np.genfromtxt("/home/wout/Documents/Astro_sim/Project/Fatsoenlijke_data/3_body/Energy_3_body_h=0.001000e=0.000000.txt", unpack = True)
 t3, E3 = np.genfromtxt("/home/wout/Documents/Astro_sim/Project/Fatsoenlijke_data/3_body/Energy_3_body_h=0.000100e=0.000000.txt", unpack = True)
 
+#y array is used for y-axis ticks
 y = np.zeros((6))
-
 for i in range(6):
     y[i] = 10 ** (-4-i)
 
+#Plotting
 plt.semilogy(t1,E1,label=r'$h = 0.01$')
 plt.semilogy(t2,E2,label=r'$h = 0.001$')
 plt.semilogy(t3,E3,label=r'$h = 0.0001$')
