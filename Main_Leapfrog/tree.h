@@ -56,7 +56,7 @@ public:
 		return c;
 	}
 
-	// deze functie split, split de ruimte op in octanten en bekijkt welke deeltjes verplaatst moeten worden naar elk octant
+	// deze functie "split", splitst de ruimte op in octanten en bekijkt welke deeltjes van de ouders verplaatst moeten worden naar elk van de octanten
 
 	vector<Leaf> split() {
 		double x0 = _space[0];
@@ -81,7 +81,7 @@ public:
 		Leaf VII({{x0, xmid, y0, ymid, z0, zmid}}, v);
 		Leaf VIII({{x0, xmid, ymid, y1, z0, zmid}}, v);
 
-		// stopde kinderen van de ruimte in de array
+		// stop de kinderen van de ruimte in de array
 
 		array<Leaf,8> kinderen = {{I, II, III, IV, V, VI, VII, VIII}};
 
@@ -117,7 +117,7 @@ public:
 
 };
 
-//declaration for new tree node: onthou de COM, geometrisch center de width en het aantal deeltjes.
+//declaration for new tree node: onthou de COM, geometrisch center de width van de box en het aantal deeltjes.
 struct node  { 
 tuple<Vec, vector<double>, double, double> data; 
 struct node *I; 
