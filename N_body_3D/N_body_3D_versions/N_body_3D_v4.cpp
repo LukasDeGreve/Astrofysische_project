@@ -6,7 +6,6 @@
 #include <vector>
 #include <string>
 #include <chrono>
-#include "ezETAProgressBar.hpp"
 #include "Vector2.h"
 using namespace std;
 
@@ -42,22 +41,17 @@ double E(const vector<Vec>& pos, const vector<Vec>& vel, const vector<double>& m
 int main() {
 
 	chrono::steady_clock::time_point begin = chrono::steady_clock::now();
-	
-        ez::ezETAProgressBar eta_time(51);
 
-	eta_time.start();
+	cout << "Writing to outputfile..." << endl;
 
-for (int r = 0; r < 51; ++r, ++eta_time) {
-
-	cout << r << endl;
 
 	//Declaration/initialisation
 	int N;				//#particles
 	const double h = 0.001;		//time step
-	const double e = 0.01*r;		//softening
-	const double time_steps = 2000;	//amount of time steps
+	const double e = 0.05;		//softening
+	const double time_steps = 25000;	//amount of time steps
 	double controlE = 0.;		//initial energy (initialised to zero for now)
-	const int write_step = 2000;	//the position of the particles will be written to a file every 10 steps
+	const int write_step = 20;	//the position of the particles will be written to a file every 10 steps
 
 	//Declaration of position, velocity and mass variables
 	vector<Vec> pos;		//position at integer time steps
@@ -72,11 +66,11 @@ for (int r = 0; r < 51; ++r, ++eta_time) {
 	vector<double> m;		//mass of the particles
 
 	//creating output files; one for the positions, one for the total energy
-        ofstream outfile("Positions_Plummer500_h=" + to_string(h)  + "e=" + to_string(e) + ".txt");
-        outfile << setprecision(12);
+	ofstream outfile("Positions_Plummer_100_h=" + to_string(h)  + "e=" + to_string(e) + ".txt");
+	outfile << setprecision(12);
 
-        ofstream outfile_E("Energy_Plummer500_body_h=" + to_string(h)  + "e=" + to_string(e) + ".txt");
-        outfile_E << setprecision(12);
+	ofstream outfile_E("Energy_error_Plummer_100_h=" + to_string(h)  + "e=" + to_string(e) + ".txt");
+	outfile_E << setprecision(12);
 
 	//The block of code below serves to test small N-body systems with specific initial conditions.
 	//
@@ -103,7 +97,7 @@ for (int r = 0; r < 51; ++r, ++eta_time) {
 
 	//Below, the initial conditions are loaded into the program
 	ifstream inFile;
-	inFile.open("/home/wout/Documents/Astro_sim/Project/Main_Leapfrog/initial_conditions_500particles.txt",std::ios::in);
+	inFile.open("/home/wout/Documents/Astro_sim/Project/Fatsoenlijke_data/Plummer_100/initial_conditions_100particles.txt",std::ios::in);
 	double posx,posy,posz,velx,vely,velz;
 	int i = 0;
 	double num = 0.;
@@ -146,17 +140,17 @@ for (int r = 0; r < 51; ++r, ++eta_time) {
 	//For loop over all the particles
 	for (int i = 0; i < N; ++i) {
 		pos_half.push_back(pos[i] + 0.5 * h * vel[i] + (h * h / 8)*acc(pos, m, i , N, e));
-		//outfile << i << ' ' << pos_half[i].x() << ' ' << pos_half[i].y() << ' ' << pos_half[i].z() << "\n";
+		outfile << i << ' ' << pos_half[i].x() << ' ' << pos_half[i].y() << ' ' << pos_half[i].z() << "\n";
 	}
-	//outfile << "\n";
+	outfile << "\n";
 
 
 	//Calculating the rest of the positions and velocities using the leapfrog integrator
 	//For loop over all timesteps 
 	for (int n = 0; n < time_steps; ++n) {
-		//if (n % write_step == 0) {
-		//	cout << "time step  " << n << "/" << to_string(time_steps) << endl;
-		//}
+		if (n % write_step == 0) {
+			cout << "time step  " << n << "/" << to_string(time_steps) << endl;
+		}
 		//Calculating velocity (Acceleration calculation needs to be in a seperate for loop)
 		//For loop over all particles
 		for (int i = 0; i < N; ++i) {
@@ -188,11 +182,12 @@ for (int r = 0; r < 51; ++r, ++eta_time) {
 		}
 	}
 
+	cout << "Done writing" << endl;
 
 	//Close files
 	outfile.close();
 	outfile_E.close();
-}
+
 	chrono::steady_clock::time_point end = chrono::steady_clock::now();
     	cout << "Time difference = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() * 0.001 << "s" << endl;
 }
