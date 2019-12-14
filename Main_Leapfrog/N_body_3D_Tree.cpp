@@ -13,18 +13,8 @@ using namespace std;
 
 //Program units: G=1
 //Define functions
-//Calculating acceleration
-Vec acc(const vector<Vec>& pos, const vector<double>& m, int i, int N, double e) {
-	Vec sum(0.,0.,0.);
-	for (int j = 0; j < N; ++j) {
-		if (i != j) {
-		sum += m[j] * (pos[j] - pos[i])/pow(e*e + (pos[i]-pos[j]).norm2(), 1.5);
-		}
-	}
-	return sum;
-}
-
 //Calculating total energy
+//For the Plummer sphere, the mass of every particle is 1/N
 double E(const vector<Vec>& pos, const vector<Vec>& vel, int N, double e) {
 	double Kin = 0.;
 	double Pot = 0.;
@@ -42,11 +32,10 @@ double E(const vector<Vec>& pos, const vector<Vec>& vel, int N, double e) {
 //Main program
 int main() {
 
+	//Start timer to determine the computation time
 	chrono::steady_clock::time_point begin = chrono::steady_clock::now();
 
-	cout << "Writing to outputfile..." << endl;
-
-	//creating output files; one for the positions, one for the total energy
+	//Creating output files; one for the positions, one for the total energy
 	ofstream outfile("Positions100.txt");
 	outfile << setprecision(12);
 
@@ -54,15 +43,15 @@ int main() {
 	outfile_E << setprecision(12);
 
 	//Declaration/initialisation
-	int N;				//#particles
-	const double h = 0.001;		//time step
-	const double e = 0.5;		//softening
-	const double delta = 0.25;
-	const double time_steps = 25000;	//amount of time steps
-	double controlE = 0.;		//initial energy (initialised to zero for now)
-	const int write_step = 20;	//the position of the particles will be written to a file every 10 steps
+	int N;						//#particles
+	const double h = 0.001;				//time step
+	const double e = 0.5;				//softening
+	const double delta = 0.25;			//delta which is used for the tree
+	const double time_steps = 25000;		//amount of time steps
+	double controlE = 0.;				//initial energy (initialised to zero for now)
+	const int write_step = 20;			//the position of the particles will be written to a file every write_step amount of steps
 
-	//Declaration of position, velocity and mass variables
+	//Declaration of position and velocity variables
 	vector<Vec> pos;		//position at integer time steps
 	vector<Vec> pos_half;		//position at half-integer time steps
 	vector<Vec> pos_half_next;	//the next position at half-integer time steps
@@ -72,30 +61,33 @@ int main() {
 	vector<Vec> vel_next;		//the next velocity at half-integer time steps
 	Vec vel_temp;			//temporary variable
 
+	//A progress bar is used to keep up how much of the calculations are done
 	ez::ezETAProgressBar eta_time(time_steps);
 
 	//The block of code below serves to test small N-body systems with specific initial conditions.
-	//
+	
+	//////////////////////////////////////////////////////////////////////////////////////////////
 /*
+	//Initial conditions for the bounded three body problem
+	//The masses in the energy function (in this program)  and force calculation (in the tree file)
+	//need to be equal to one
 	vel.push_back(Vec(0.4662036850,0.4323657300,0.));
 	vel.push_back(Vec(-0.93240737,-0.86473146,0.));
 	vel.push_back(Vec(0.4662036850,0.4323657300,0.));
 	pos.push_back(Vec(-.97000436,0.24308753,0.));
 	pos.push_back(Vec(0.,0.,0.));
 	pos.push_back(Vec(0.97000436,-0.24308753,0.));
-	
-	m.push_back(1.);
-	m.push_back(1.);
-	m.push_back(1.);
+
+	//Used do determine the size of the space (which is needed for the tree) for the problem
+	double num = 2.;
 	
 	for(int i = 0; i < N; ++i) {
 		outfile << i << ' ' <<  pos[i].x() << ' ' << pos[i].y() << ' ' << pos[i].z() << "\n";
 		pos_half_next.push_back(Vec(0.,0.,0.));
 		vel_next.push_back(Vec(0.,0.,0.));
 	}
-	//
 */	
-
+	///////////////////////////////////////////////////////////////////////////////////////////////
 
 	//Below, the initial conditions are loaded into the program
 	ifstream inFile;
@@ -104,13 +96,14 @@ int main() {
 	int i = 0;
 	double num = 0.;
 
+	//Loading in the data
 	while(inFile >> posx >> posy >> posz >> velx >> vely >> velz) {
-		//Calculate the maximum width for the total space
+		//Determine the maximum width for the total space where the particles are located
 		if (abs(posx) > num) {num = abs(posx) + 1;}
 		if (abs(posy) > num) {num = abs(posy) + 1;}
 		if (abs(posz) > num) {num = abs(posz) + 1;}
 
-		//Initialising pos and vectors
+		//Initialising pos and vel vectors
 		pos.push_back(Vec(posx,posy,posz));
 		vel.push_back(Vec(velx,vely,velz));
 
@@ -131,39 +124,39 @@ int main() {
 	outfile_E << 0. << ' ' << 0.  << "\n";
 	outfile << "\n";
 
+	//Make tree
+	node* tree = maketree(pos, num);
 
 	//Determining position at first half step	
 	//For loop over all the particles
-
-	//Make tree
-	node* tree = maketree(pos, num);
 	for (int i = 0; i < N; ++i) {
 		pos_half.push_back(pos[i] + 0.5 * h * vel[i] + (h * h / 8)*force(tree,pos[i],N,delta,e));
 		outfile << i << ' ' << pos_half[i].x() << ' ' << pos_half[i].y() << ' ' << pos_half[i].z() << "\n";
 	}
 	outfile << "\n";
 
-	// destruct the tree
+	//Destruct the tree
 	tree = overloop(tree);
+
+	//Start time for progress bar
+	eta_time.start();
 
 	//Calculating the rest of the positions and velocities using the leapfrog integrator
 	//For loop over all timesteps 
-	eta_time.start();
 	for (int n = 0; n < time_steps; ++n, ++eta_time) {
 		//Make tree
 		node* tree = maketree(pos_half, num);
-		//if (n % write_step == 0) {
-		//	cout << "time step  " << n << "/" << to_string(time_steps) << endl;
-		//}
-		//Calculating velocity (Acceleration calculation needs to be in a seperate for loop)
+
+		//Calculating velocity (acceleration calculation needs to be in a seperate for loop)
 		//For loop over all particles
 		for (int i = 0; i < N; ++i) {
 			vel_next[i] = vel[i] + h * force(tree,pos_half[i], N, delta, e);
 		}
 		
-		// destruct the tree
+		//Destruct the tree
 		tree = overloop(tree);
-		//Calculating postion
+
+		//Calculating position
 		//For loop over all particles
 		for (int i = 0; i < N; ++i) {
 			pos_half_next[i] = pos_half[i] + h * vel_next[i];
@@ -172,28 +165,25 @@ int main() {
 			pos[i] = pos_half[i] - h / 2 * vel[i];
 
 			//To minimize output file size and ensure that the program does not slow down due to writing too much data,
-			//the following if statement is used to write the position of every particle every x amount of steps
+			//the following if statement is used to write the position of every particle every write_step amount of steps
 			if (n % write_step == 0) { 
 				outfile << i << ' ' <<  pos_half[i].x() << ' ' << pos_half[i].y() << ' ' << pos_half[i].z() << "\n";
 			}
-		}
-		
-		if (n % write_step == 0) { 
-			outfile << "\n";
-		}
+		}	
 
 		//Writing the time and relative energy error to another file
 		if (n % write_step == 0) { 
+			outfile << "\n";
 			outfile_E << n*h << ' ' << abs((E(pos, vel, N, e) - controlE)/controlE) << "\n";
 		}
-	}
 
-	cout << "Done writing" << endl;
+	}
 
 	//Close files
 	outfile.close();
 	outfile_E.close();
 
+	//Stop timing the program and print out the computation time
 	chrono::steady_clock::time_point end = chrono::steady_clock::now();
     	cout << "Time difference = " << chrono::duration_cast<chrono::milliseconds>(end - begin).count() * 0.001 << "s" << endl;
 }
