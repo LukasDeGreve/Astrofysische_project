@@ -57,6 +57,7 @@ ax = Axes3D(fig)
 
 #skip data points
 skip = 1
+#trail length for particles
 trail = 15
 size_particle = 0.5
 #generating a color for every particle
